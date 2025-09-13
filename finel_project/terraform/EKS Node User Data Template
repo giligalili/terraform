@@ -1,0 +1,26 @@
+#!/bin/bash
+# terraform/templates/user-data.sh
+
+# Configure EKS worker node
+/etc/eks/bootstrap.sh ${cluster_name}
+
+# Install additional packages
+yum update -y
+yum install -y amazon-ssm-agent
+
+# Start SSM agent
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
+
+# Configure Docker daemon for optimization
+cat <<EOF > /etc/docker/daemon.json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+EOF
+
+systemctl restart docker
